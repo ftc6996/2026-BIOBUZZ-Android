@@ -54,6 +54,15 @@ public class Robot{
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotor intake_motor;
     private DcMotor left_front_drive, left_rear_drive, right_front_drive, right_rear_drive;
+    private CRServo windmillServo = null;
+    private DcMotorEx launcher = null;
+
+    public Robot() {
+        initDrive();
+        initIMU();
+        initPinPoint();
+    }
+
     private void initDrive()
     {
         left_front_drive  = hardwareMap.get(DcMotor.class, "left_front_drive");
@@ -141,11 +150,11 @@ public class Robot{
      *****************************************************************/
     public Limelight3A vision;
     public int target_velocity;
-    public int target_tag = kTAG_ANY;
+    public int target_tag = -1;
     public boolean isTargetFound = false;
     public boolean isAccurite = false;
     public boolean rapidFire = false;
-    public Pose2D aprilTagPose =  new Pose2D(DistanceUnit.INCH, kRED_GOAL_X_OFFSET, kRED_GOAL_Y_OFFSET, AngleUnit.DEGREES, 0);
+    public Pose2D aprilTagPose =  new Pose2D(DistanceUnit.INCH, -66, 66, AngleUnit.DEGREES, 0);
     public double dX, dY;
     public int numShotsRequested = 0;
     public int numShotsFufiled = 0;
@@ -156,7 +165,7 @@ public class Robot{
     {
         return tagDistance;
     }
-    public LimeLight(Limelight3A vision)
+    /*public LimeLight(Limelight3A vision)
     {
         this.vision = vision;
 
@@ -171,7 +180,7 @@ public class Robot{
         setPipeline(pipeline);
         vision.start();
         clearFoundAprilTag();
-    }
+    }*/
     public void setPipeline(int pipeline) {vision.pipelineSwitch(pipeline);}
     public int getPipeline()
     {
@@ -240,17 +249,16 @@ public class Robot{
         intake_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         intake_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        turret_feeder_servo = hardwareMap.get(Servo.class, "turret_feeder_servo");
+        windmillServo = hardwareMap.get(CRServo.class, "windmillServo");
 
-        turret_flywheel_motor = hardwareMap.get(DcMotorEx.class, "turret_flywheel_motor");
-        turret_flywheel_motor.setDirection(DcMotorSimple.Direction.REVERSE);
-        turret_flywheel_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        launcher = hardwareMap.get(DcMotorEx.class, "launcher");
+        launcher.setDirection(DcMotorSimple.Direction.REVERSE);
+        launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         PIDFCoefficients pidf = new PIDFCoefficients(94, 0,0, 12);
-        turret_flywheel_motor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
+        launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
 
         vision = hardwareMap.get(Limelight3A.class, "limelight");
-        limeLight = new LimeLight(vision);
     }
     public void updatePinPoint(){
         if (!isPinpointInitialized)
@@ -271,15 +279,15 @@ public class Robot{
             setPower(0, 0, 0, 0);
         }
     }
+    public void stop() {setPower(0,0,0,0);}
     public void intake(double power) {
         intake_motor.setPower(power);
     }
     public void setFlyWheelVelocity(double velocity) {
-        turret_flywheel_motor.setVelocity(velocity);
+        launcher.setVelocity(velocity);
     }
     public void shoot(boolean shotRequested, int velocity, int numShots) {
         numShotsRequested = numShots;
-        shotRequested = startShoot;
         target_velocity = Math.abs(velocity);
     }
     public Pose2D getPinpointPosition(){
@@ -291,19 +299,17 @@ public class Robot{
     {
         getAprilTags();
     }
-    public int getTagID() {return tagID();}
+    public int getTagID() {return tagID;}
     public double getTagLocationX()
     {
-        return tagLocationX();
+        return tagLocationX;
     }
     public double getTagLocationY()
     {
-        return tagLocationY();
+        return tagLocationY;
     }
     public void processTelemetry(Telemetry telemetry) {
         telemetry.addData("Launch State: ", launchState);
-        telemetry.addData("Launch Target Velocity:", getTargetVelocity());
-        telemetry.addData("Launch Current Velocity:", getFlyWheelVelocity());
 
         telemetry.addLine("-----------------------------------");
         telemetry.addData("Pipeline",getPipeline());
