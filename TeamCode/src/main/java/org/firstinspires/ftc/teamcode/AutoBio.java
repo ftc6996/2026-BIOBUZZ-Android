@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.teamcode.Pedro.Constants.*;
+//import static org.firstinspires.ftc.teamcode.Pedro.Constants.*;
 //import static org.firstinspires.ftc.teamcode.Constants.Game.*;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -23,17 +23,22 @@ public class AutoBio extends OpMode{
         MOVE,
         STOP
     }
-    private Robot robot = new Robot();
+    private final Robot robot = new Robot();
     private ElapsedTime runtime = new ElapsedTime();
     private boolean isMoving = false;
     private AutonomousState autonomousState= AutonomousState.START;
     private Pose2D currentPos = new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.DEGREES, 0);
     private Pose2D targetPos = new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.DEGREES, 0);
+
+    @Override
+    public void loop(){
+        run();
+    }
     public void run() {
         switch (autonomousState) {
             case START:
-                targetPos = new Pose2D(DistanceUnit.INCH, currentPos.getX(DistanceUnit.INCH) + 0, //X --> Forward, -X --> Backward
-                        currentPos.getY(DistanceUnit.INCH) - 12.5, AngleUnit.DEGREES, 0); //Y --> Right, -Y --> Left
+                targetPos = new Pose2D(DistanceUnit.INCH, currentPos.getX(DistanceUnit.INCH) + 12, //X --> Forward, -X --> Backward
+                    currentPos.getY(DistanceUnit.INCH) + 12, AngleUnit.DEGREES, 45); //Y --> Right, -Y --> Left
                 autonomousState = AutonomousState.MOVE;
                 break;
             case MOVE:
@@ -50,10 +55,5 @@ public class AutoBio extends OpMode{
                 //finished = true;
                 break;
         }
-    }
-
-    @Override
-    public void loop(){
-
     }
 }

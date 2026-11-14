@@ -20,18 +20,13 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.Pedro.Constants;
@@ -53,9 +48,10 @@ public class Robot{
      *****************************************************************/
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotor intake_motor;
+    private Servo rightActuator;
     private DcMotor left_front_drive, left_rear_drive, right_front_drive, right_rear_drive;
-    private CRServo windmillServo = null;
-    private DcMotorEx launcher = null;
+    private CRServo windmillServo;
+    private DcMotor launcher;
 
     public Robot() {
         initDrive();
@@ -66,12 +62,12 @@ public class Robot{
     private void initDrive()
     {
         left_front_drive  = hardwareMap.get(DcMotor.class, "left_front_drive");
-        left_rear_drive = hardwareMap.get(DcMotor.class, "left_rear_drive");
+        left_rear_drive = hardwareMap.get(DcMotor.class, "left_back_drive");
         right_front_drive  = hardwareMap.get(DcMotor.class, "right_front_drive");
-        right_rear_drive = hardwareMap.get(DcMotor.class, "right_rear_drive");
+        right_rear_drive = hardwareMap.get(DcMotor.class, "right_back_drive");
 
         left_front_drive.setDirection(DcMotor.Direction.REVERSE);
-        left_rear_drive.setDirection(com.qualcomm.robotcore.hardware.DcMotor.Direction.REVERSE);
+        left_rear_drive.setDirection(DcMotor.Direction.REVERSE);
         right_front_drive.setDirection(DcMotor.Direction.FORWARD);
         right_rear_drive.setDirection(DcMotor.Direction.FORWARD);
 
@@ -238,27 +234,20 @@ public class Robot{
         initIMU();
         initPinPoint();
 
-        intake_motor = hardwareMap.get(DcMotor.class, "intake_motor");
+        intake_motor = hardwareMap.get(DcMotor.class, "intake");
         intake_motor.setDirection(DcMotor.Direction.REVERSE);
         intake_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         intake_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        rightActuator = hardwareMap.get(Servo.class, "Actuator1");
+
         launchState = LaunchState.IDLE;
-        intake_motor = hardwareMap.get(DcMotor.class, "intake_motor");
-        intake_motor.setDirection(DcMotor.Direction.REVERSE);
-        intake_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        intake_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         windmillServo = hardwareMap.get(CRServo.class, "windmillServo");
 
-        launcher = hardwareMap.get(DcMotorEx.class, "launcher");
-        launcher.setDirection(DcMotorSimple.Direction.REVERSE);
+        launcher = hardwareMap.get(DcMotor.class, "launcher");
+        launcher.setDirection(DcMotor.Direction.REVERSE);
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        PIDFCoefficients pidf = new PIDFCoefficients(94, 0,0, 12);
-        launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
-
-        vision = hardwareMap.get(Limelight3A.class, "limelight");
     }
     public void updatePinPoint(){
         if (!isPinpointInitialized)
@@ -283,9 +272,11 @@ public class Robot{
     public void intake(double power) {
         intake_motor.setPower(power);
     }
-    public void setFlyWheelVelocity(double velocity) {
-        launcher.setVelocity(velocity);
-    }
+    //public void setFlyWheelVelocity(double velocity) {
+        //launcher.setVelocity(velocity);
+    //}
+    public void setFE(double pos){rightActuator.setPosition(pos);}
+    public double getFE(){return rightActuator.getPosition();}
     public void shoot(boolean shotRequested, int velocity, int numShots) {
         numShotsRequested = numShots;
         target_velocity = Math.abs(velocity);
